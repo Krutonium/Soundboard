@@ -60,6 +60,7 @@ namespace Soundboard
                     textbox.Text = bind.Value.ToString();
                     tmprow++;
                 }
+                cbCaps.Checked = Keybindings.ToggleOnCaps;
             } else
             {
                 Keybindings.binds = new Dictionary<string, VirtualKeycodes>();
@@ -72,13 +73,23 @@ namespace Soundboard
         class Keybinds
         {
             public Dictionary<string, VirtualKeycodes> binds = new Dictionary<string, VirtualKeycodes>();
+            public bool ToggleOnCaps = false;
         }
 
         private void GlobalKeyHook_OnKeyDown(object sender, GlobalKeyEventArgs e)
         {
             foreach (var bind in Keybindings.binds)
             {
-                if (bind.Value == e.KeyCode)
+                bool caprequired = false;
+                if (Keybindings.ToggleOnCaps == true && Console.CapsLock)
+                {
+                    caprequired = true;
+                }
+                else if(Keybindings.ToggleOnCaps == false)
+                {
+                    caprequired = true;
+                }
+                if (bind.Value == e.KeyCode && caprequired)
                 {
                     if (OutputDevice.PlaybackState == PlaybackState.Playing)
                     {
@@ -191,7 +202,9 @@ namespace Soundboard
 
         private void BtnSave_Click(object sender, EventArgs e)
         {
+            bool caps = Keybindings.ToggleOnCaps;
             Keybindings = new Keybinds();
+            Keybindings.ToggleOnCaps = caps;
             for (int count = 0; count < CurrRow; count++)
             {
                 var button = FindButtonByNumber(count);
@@ -217,6 +230,11 @@ namespace Soundboard
                 }
             }
             File.WriteAllText("./binds.json", JsonConvert.SerializeObject(Keybindings,Formatting.Indented));
+        }
+
+        private void cbCaps_CheckedChanged(object sender, EventArgs e)
+        {
+            Keybindings.ToggleOnCaps = cbCaps.Checked;
         }
     }
 }
